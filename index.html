@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrenapp — Encontrá tu preparador físico</title>
+    <meta
+      name="description"
+      content="Buscá preparadores físicos freelance, mirá reseñas, rutinas, turnos y precios, y consultales directo por mensaje."
+    />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+  </head>
+  <body>
+    <header class="site-header"><site-header></site-header></header>
+
+    <main class="page-main">
+      <div class="container">
+        <section class="hero">
+          <h1 class="hero__title">Encontrá tu preparador físico ideal</h1>
+          <p class="hero__subtitle text-secondary">
+            Mirá reseñas reales, rutinas, turnos disponibles y precios. Consultá directo por mensaje antes de arrancar.
+          </p>
+          <form id="search-form" style="display:flex; gap:8px; max-width:480px; margin-top:24px;">
+            <input
+              class="input"
+              type="search"
+              name="search"
+              placeholder="Buscar por nombre o ciudad…"
+              aria-label="Buscar preparador"
+            />
+            <button class="btn btn--primary" type="submit">Buscar</button>
+          </form>
+        </section>
+
+        <section class="section">
+          <div class="section__head">
+            <h2 id="results-title">Preparadores</h2>
+          </div>
+          <div id="trainers-grid" class="grid grid--cards" aria-live="polite">
+            <div class="card skeleton" style="height:180px;"></div>
+            <div class="card skeleton" style="height:180px;"></div>
+            <div class="card skeleton" style="height:180px;"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <span>Entrenapp</span>
+        <span>Conectamos alumnos con preparadores físicos freelance.</span>
+      </div>
+    </footer>
+
+    <script type="module" src="js/pages/index.js"></script>
+  </body>
+</html>

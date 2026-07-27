@@ -1,0 +1,173 @@
+/* Reset + variables de diseño. Cambiar acá recolorea/retipografía todo el sitio. */
+
+:root {
+  --color-bg: #faf9f7;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f2f1ee;
+  --color-border: #e7e5e1;
+  --color-text: #14161a;
+  --color-text-secondary: #5b6270;
+  --color-text-faint: #8a909c;
+
+  --color-brand: #ff5a1f;
+  --color-brand-dark: #e64c15;
+  --color-brand-tint: #fff1ea;
+  --color-ink: #14161a;
+
+  --color-success: #16a34a;
+  --color-success-tint: #eafaf0;
+  --color-danger: #dc2626;
+  --color-danger-tint: #fdecec;
+  --color-promo: #b45309;
+  --color-promo-tint: #fef3e0;
+  --color-star: #f5a623;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(20, 22, 26, 0.06);
+  --shadow-md: 0 6px 20px rgba(20, 22, 26, 0.08);
+  --shadow-lg: 0 16px 40px rgba(20, 22, 26, 0.14);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --container-width: 1120px;
+  --header-height: 64px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #101215;
+    --color-surface: #181b20;
+    --color-surface-alt: #1e2228;
+    --color-border: #2a2e35;
+    --color-text: #f2f2f0;
+    --color-text-secondary: #a6acb8;
+    --color-text-faint: #767c88;
+
+    --color-brand-tint: #2a1c14;
+    --color-success-tint: #10261b;
+    --color-danger-tint: #2a1414;
+    --color-promo-tint: #2a2110;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
+
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 1.4rem + 1.5vw, 2.5rem);
+}
+
+h2 {
+  font-size: clamp(1.35rem, 1.15rem + 0.8vw, 1.75rem);
+}
+
+h3 {
+  font-size: 1.15rem;
+}
+
+a {
+  color: inherit;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: 1rem;
+  color: inherit;
+}
+
+/* Evita el flash de contenido protegido antes de validar sesión/rol (ver js/guard.js) */
+body.auth-checking .app-content {
+  display: none;
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-faint {
+  color: var(--color-text-faint);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

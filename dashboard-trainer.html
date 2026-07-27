@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi panel — Entrenapp</title>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+  </head>
+  <body class="auth-checking">
+    <header class="site-header"><site-header></site-header></header>
+
+    <main class="page-main app-content">
+      <div class="container">
+        <div class="section__head">
+          <h1>Mi panel</h1>
+        </div>
+
+        <div class="dashboard">
+          <nav class="dashboard__nav">
+            <button class="tab-btn is-active" data-tab="estado" type="button">📍 Estado semanal</button>
+            <button class="tab-btn" data-tab="rutinas" type="button">📋 Rutinas</button>
+            <button class="tab-btn" data-tab="turnos" type="button">🗓️ Turnos</button>
+            <button class="tab-btn" data-tab="precios" type="button">💵 Precios y promos</button>
+            <button class="tab-btn" data-tab="resenas" type="button">⭐ Reseñas</button>
+          </nav>
+
+          <div>
+            <section data-panel="estado" class="card">
+              <h2>¿En qué estás trabajando esta semana?</h2>
+              <p class="text-secondary" style="margin-bottom: 16px">Esto lo ven todos los alumnos en tu perfil público.</p>
+              <form id="focus-form">
+                <div class="field">
+                  <textarea
+                    class="textarea"
+                    id="focus-text"
+                    name="current_focus"
+                    placeholder="Ej: Esta semana enfocado en fuerza de tren inferior…"
+                  ></textarea>
+                  <span class="field-hint" id="focus-updated"></span>
+                </div>
+                <button class="btn btn--primary" type="submit">Guardar</button>
+              </form>
+            </section>
+
+            <section data-panel="rutinas" class="card" hidden>
+              <div class="section__head">
+                <h2>Rutinas</h2>
+                <button class="btn btn--primary btn--sm" id="new-routine-btn" type="button">+ Nueva rutina</button>
+              </div>
+              <div id="routines-list"></div>
+            </section>
+
+            <section data-panel="turnos" class="card" hidden>
+              <div class="section__head">
+                <h2>Turnos disponibles</h2>
+                <button class="btn btn--primary btn--sm" id="new-slot-btn" type="button">+ Nuevo turno</button>
+              </div>
+              <div id="slots-list"></div>
+            </section>
+
+            <section data-panel="precios" class="card" hidden>
+              <div class="section__head">
+                <h2>Precios y promos</h2>
+                <button class="btn btn--primary btn--sm" id="new-price-btn" type="button">+ Nuevo precio</button>
+              </div>
+              <div id="pricing-list"></div>
+            </section>
+
+            <section data-panel="resenas" class="card" hidden>
+              <h2>Reseñas de alumnos</h2>
+              <div id="reviews-list"></div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="modal-root"></div>
+
+    <script type="module" src="js/pages/dashboard-trainer.js"></script>
+  </body>
+</html>

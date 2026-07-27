@@ -1,0 +1,86 @@
+import { supabase } from "../supabaseClient.js";
+
+// Directorio público de preparadores, con rating promedio mezclado del lado
+// del cliente (trainer_rating_summary es una vista sin FK directa a profiles,
+// así que no se puede pedir embebida en el mismo select).
+export async function listTrainers({ search = "" } = {}) {
+  let query = supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url, bio, city, modality, specialties, current_focus, current_focus_updated_at")
+    .eq("role", "preparador")
+    .order("full_name", { ascending: true });
+
+  const term = search.trim();
+  if (term) {
+    query = query.or(`full_name.ilike.%${term}%,city.ilike.%${term}%`);
+  }
+
+  const { data: trainers, error } = await query;
+  if (error) throw error;
+  if (!trainers.length) return [];
+
+  const { data: ratings } = await supabase
+    .from("trainer_rating_summary")
+    .select("trainer_id, avg_rating, reviews_count")
+    .in("trainer_id", trainers.map((t) => t.id));
+
+  const ratingByTrainer = new Map((ratings || []).map((r) => [r.trainer_id, r]));
+  return trainers.map((t) => ({
+    ...t,
+    avg_rating: ratingByTrainer.get(t.id)?.avg_rating ?? null,
+    reviews_count: ratingByTrainer.get(t.id)?.reviews_count ?? 0,
+  }));
+}
+
+export async function getTrainerProfile(trainerId) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", trainerId)
+    .eq("role", "preparador")
+    .single();
+  if (error) throw error;
+
+  const { data: ratingRow } = await supabase
+    .from("trainer_rating_summary")
+    .select("avg_rating, reviews_count")
+    .eq("trainer_id", trainerId)
+    .maybeSingle();
+
+  return {
+    ...data,
+    avg_rating: ratingRow?.avg_rating ?? null,
+    reviews_count: ratingRow?.reviews_count ?? 0,
+  };
+}
+
+export async function getMyProfile(userId) {
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateProfile(userId, fields) {
+  const { error } = await supabase.from("profiles").update(fields).eq("id", userId);
+  if (error) throw error;
+}
+
+export async function updateCurrentFocus(userId, text) {
+  return updateProfile(userId, {
+    current_focus: text,
+    current_focus_updated_at: new Date().toISOString(),
+  });
+}
+
+export async function uploadAvatar(userId, file) {
+  const ext = file.name.split(".").pop();
+  const path = `${userId}/${Date.now()}.${ext}`;
+  const { error: uploadError } = await supabase.storage
+    .from("avatars")
+    .upload(path, file, { upsert: true });
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  await updateProfile(userId, { avatar_url: data.publicUrl });
+  return data.publicUrl;
+}

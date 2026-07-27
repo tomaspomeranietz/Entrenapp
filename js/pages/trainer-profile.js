@@ -1,0 +1,257 @@
+import "../components/site-header.js";
+import "../components/star-rating.js";
+import { getTrainerProfile } from "../data/profiles.js";
+import { listPublishedRoutines } from "../data/routines.js";
+import { listActivePricing } from "../data/pricing.js";
+import { listUpcomingAvailability } from "../data/availability.js";
+import { listReviewsForTrainer, getMyReviewFor, upsertMyReview } from "../data/reviews.js";
+import { getSessionAndProfile } from "../guard.js";
+import { $, escapeHtml } from "../utils/dom.js";
+import { initials, modalityLabel, levelLabel, formatCurrency, formatTimeRange, formatRelativeTime } from "../utils/format.js";
+import { showError, showSuccess } from "../utils/toast.js";
+
+const trainerId = new URLSearchParams(location.search).get("id");
+
+if (!trainerId) {
+  showNotFound();
+} else {
+  init(trainerId);
+}
+
+async function init(id) {
+  let trainer;
+  try {
+    trainer = await getTrainerProfile(id);
+  } catch (err) {
+    showNotFound();
+    return;
+  }
+
+  document.title = `${trainer.full_name} — Entrenapp`;
+  renderHero(trainer);
+  $("#trainer-content").hidden = false;
+
+  const [routines, pricing, availability, reviews, viewer] = await Promise.all([
+    listPublishedRoutines(id).catch(() => []),
+    listActivePricing(id).catch(() => []),
+    listUpcomingAvailability(id).catch(() => []),
+    listReviewsForTrainer(id).catch(() => []),
+    getSessionAndProfile(),
+  ]);
+
+  renderRoutines(routines);
+  renderPricing(pricing);
+  renderAvailability(availability);
+  renderReviews(reviews);
+  renderMessageCta(viewer, id);
+
+  const isSelf = viewer.profile && viewer.profile.id === id;
+  const isStudent = viewer.profile && viewer.profile.role === "alumno" && !isSelf;
+  if (isStudent) {
+    renderReviewForm(id, viewer.profile.id);
+  }
+}
+
+function showNotFound() {
+  $("#trainer-hero").hidden = true;
+  $("#not-found").hidden = false;
+}
+
+function renderHero(trainer) {
+  const rating = trainer.avg_rating ?? 0;
+  const meta = [trainer.city, modalityLabel(trainer.modality)].filter(Boolean).join(" · ");
+  const specialties = (trainer.specialties || [])
+    .map((s) => `<span class="badge">${escapeHtml(s)}</span>`)
+    .join("");
+  const avatarInner = trainer.avatar_url
+    ? `<img src="${escapeHtml(trainer.avatar_url)}" alt="">`
+    : escapeHtml(initials(trainer.full_name));
+
+  $("#trainer-hero").innerHTML = `
+    <div class="card">
+      <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+        <span class="avatar avatar--lg">${avatarInner}</span>
+        <div style="flex:1; min-width:220px;">
+          <h1>${escapeHtml(trainer.full_name)}</h1>
+          ${meta ? `<p class="text-secondary">${escapeHtml(meta)}</p>` : ""}
+          <div class="rating-summary" style="margin-top:8px;">
+            <star-rating value="${Math.round(rating)}"></star-rating>
+            <span class="rating-summary__count">${
+              trainer.reviews_count ? `${rating.toFixed(1)} (${trainer.reviews_count} reseñas)` : "Sin reseñas todavía"
+            }</span>
+          </div>
+          ${specialties ? `<div class="trainer-card__tags" style="margin-top:12px;">${specialties}</div>` : ""}
+          <div id="message-cta" style="margin-top:16px;"></div>
+        </div>
+      </div>
+      ${
+        trainer.current_focus
+          ? `<div class="badge badge--brand" style="margin-top:20px; display:block; padding:12px 16px; height:auto; border-radius:var(--radius-md); white-space:normal;">
+              <strong>Esta semana:</strong> ${escapeHtml(trainer.current_focus)}
+              <span class="text-faint" style="display:block; font-size:.75rem; margin-top:4px;">Actualizado ${formatRelativeTime(trainer.current_focus_updated_at)}</span>
+            </div>`
+          : ""
+      }
+      ${trainer.bio ? `<p style="margin-top:20px;">${escapeHtml(trainer.bio)}</p>` : ""}
+    </div>
+  `;
+}
+
+function renderMessageCta(viewer, trainerId) {
+  const el = $("#message-cta");
+  const isSelf = viewer.profile && viewer.profile.id === trainerId;
+  if (viewer.profile && viewer.profile.role === "alumno" && !isSelf) {
+    el.innerHTML = `<a class="btn btn--primary" href="messages.html?with=${encodeURIComponent(trainerId)}">Mandar mensaje</a>`;
+  } else if (!viewer.session) {
+    el.innerHTML = `<a class="btn btn--primary" href="login.html?redirect=${encodeURIComponent(location.pathname + location.search)}">Ingresá para consultar</a>`;
+  }
+}
+
+function renderRoutines(routines) {
+  const list = $("#routines-list");
+  if (!routines.length) {
+    list.innerHTML = `<p class="text-secondary">Todavía no publicó rutinas.</p>`;
+    return;
+  }
+  list.innerHTML = routines
+    .map(
+      (r) => `
+      <div class="list-item">
+        <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+          <span class="dashboard-row__title">${escapeHtml(r.title)}</span>
+          ${r.level ? `<span class="badge">${escapeHtml(levelLabel(r.level))}</span>` : ""}
+        </div>
+        ${r.description ? `<p class="text-secondary" style="margin-top:8px;">${escapeHtml(r.description)}</p>` : ""}
+      </div>
+    `
+    )
+    .join("");
+}
+
+function renderPricing(items) {
+  const list = $("#pricing-list");
+  if (!items.length) {
+    list.innerHTML = `<p class="text-secondary">Todavía no publicó precios.</p>`;
+    return;
+  }
+  list.innerHTML = items
+    .map(
+      (p) => `
+      <div class="list-item">
+        <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
+          <span class="dashboard-row__title">${escapeHtml(p.title)}</span>
+          ${p.is_promo ? `<span class="badge badge--promo">Promo</span>` : ""}
+        </div>
+        <div style="font-weight:700; margin-top:4px;">${formatCurrency(p.price, p.currency)}</div>
+        ${p.description ? `<p class="text-secondary" style="margin-top:4px;">${escapeHtml(p.description)}</p>` : ""}
+      </div>
+    `
+    )
+    .join("");
+}
+
+function renderAvailability(slots) {
+  const list = $("#availability-list");
+  if (!slots.length) {
+    list.innerHTML = `<p class="text-secondary">Sin turnos publicados por ahora.</p>`;
+    return;
+  }
+  list.innerHTML = slots
+    .map(
+      (s) => `
+      <div class="list-item">
+        <div>${escapeHtml(formatTimeRange(s.starts_at, s.ends_at))}</div>
+        ${s.label ? `<div class="text-secondary" style="font-size:.85rem;">${escapeHtml(s.label)}</div>` : ""}
+      </div>
+    `
+    )
+    .join("");
+}
+
+function renderReviews(reviews) {
+  const list = $("#reviews-list");
+  if (!reviews.length) {
+    list.innerHTML = `<p class="text-secondary">Todavía no tiene reseñas.</p>`;
+    return;
+  }
+  list.innerHTML = reviews
+    .map((r) => {
+      const reply = r.review_replies?.[0];
+      const studentAvatar = r.student?.avatar_url
+        ? `<img src="${escapeHtml(r.student.avatar_url)}" alt="">`
+        : escapeHtml(initials(r.student?.full_name));
+      return `
+        <div class="list-item review">
+          <div class="review__head">
+            <span class="avatar" style="width:36px;height:36px;font-size:.8rem;">${studentAvatar}</span>
+            <div>
+              <div style="font-weight:600;">${escapeHtml(r.student?.full_name || "Alumno")}</div>
+              <star-rating value="${r.rating}"></star-rating>
+            </div>
+            <span class="text-faint" style="margin-left:auto; font-size:.8rem;">${formatRelativeTime(r.created_at)}</span>
+          </div>
+          ${r.comment ? `<p>${escapeHtml(r.comment)}</p>` : ""}
+          ${
+            reply
+              ? `<div class="review__reply">
+                  <span class="review__reply-label">Respuesta del preparador</span>
+                  ${escapeHtml(reply.body)}
+                </div>`
+              : ""
+          }
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderReviewForm(trainerId, studentId) {
+  const slot = $("#review-form-slot");
+  slot.innerHTML = `<div class="skeleton" style="height:140px; margin-bottom:16px;"></div>`;
+
+  getMyReviewFor(trainerId, studentId)
+    .catch(() => null)
+    .then((existing) => {
+      slot.innerHTML = `
+        <form id="review-form" style="border:1px solid var(--color-border); border-radius:var(--radius-md); padding:16px; margin-bottom:16px;">
+          <div class="field">
+            <label>Tu puntaje</label>
+            <div><star-rating interactive id="review-stars" value="${existing?.rating || 0}"></star-rating></div>
+          </div>
+          <div class="field">
+            <label for="review-comment">Tu comentario (opcional)</label>
+            <textarea class="textarea" id="review-comment" name="comment">${existing?.comment ? escapeHtml(existing.comment) : ""}</textarea>
+          </div>
+          <button class="btn btn--primary" type="submit">${existing ? "Actualizar reseña" : "Publicar reseña"}</button>
+        </form>
+      `;
+
+      let currentRating = existing?.rating || 0;
+      const starsEl = $("#review-stars", slot);
+      starsEl.addEventListener("change", (e) => {
+        currentRating = e.detail.value;
+      });
+
+      $("#review-form", slot).addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!currentRating) {
+          showError("Elegí un puntaje antes de publicar.");
+          return;
+        }
+        const comment = $("#review-comment", slot).value.trim();
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        try {
+          await upsertMyReview(trainerId, studentId, currentRating, comment || null);
+          showSuccess("¡Gracias por tu reseña!");
+          const reviews = await listReviewsForTrainer(trainerId);
+          renderReviews(reviews);
+        } catch (err) {
+          console.error(err);
+          showError("No pudimos guardar tu reseña.");
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+}

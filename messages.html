@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mensajes — Entrenapp</title>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+  </head>
+  <body class="auth-checking">
+    <header class="site-header"><site-header></site-header></header>
+
+    <main class="page-main app-content">
+      <div class="container">
+        <h1 style="margin-bottom: 16px">Mensajes</h1>
+
+        <div class="chat-layout" id="chat-layout" data-view="list">
+          <div class="chat-list" id="conversation-list">
+            <div class="skeleton" style="height: 60px; margin: 12px"></div>
+          </div>
+
+          <div class="chat-thread">
+            <div style="padding: 12px; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: 8px">
+              <button class="btn btn--ghost btn--icon chat-back-button" id="chat-back" type="button" aria-label="Volver a la lista">←</button>
+              <div id="thread-header" style="font-weight: 600">Elegí una conversación</div>
+            </div>
+            <div class="chat-thread__messages" id="thread-messages">
+              <p class="text-secondary" style="margin: auto">Elegí una conversación de la lista para ver los mensajes.</p>
+            </div>
+            <form class="chat-thread__composer" id="composer" hidden>
+              <input class="input" type="text" id="composer-input" placeholder="Escribí un mensaje…" autocomplete="off" />
+              <button class="btn btn--primary btn--icon" type="submit" aria-label="Enviar mensaje">➤</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script type="module" src="js/pages/messages.js"></script>
+  </body>
+</html>

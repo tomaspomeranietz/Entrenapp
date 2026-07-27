@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi cuenta — Entrenapp</title>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+  </head>
+  <body class="auth-checking">
+    <header class="site-header"><site-header></site-header></header>
+
+    <main class="page-main app-content">
+      <div class="container" style="max-width: 640px">
+        <h1 style="margin-bottom: 16px">Mi cuenta</h1>
+
+        <div class="card" style="margin-bottom: 24px">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px">
+            <span class="avatar avatar--lg" id="avatar-preview"></span>
+            <div>
+              <label class="btn btn--outline btn--sm" for="avatar-input" style="cursor: pointer">Cambiar foto</label>
+              <input type="file" id="avatar-input" accept="image/*" style="display: none" />
+            </div>
+          </div>
+
+          <form id="profile-form">
+            <div class="field">
+              <label for="full_name">Nombre y apellido</label>
+              <input class="input" type="text" id="full_name" name="full_name" required />
+            </div>
+            <div class="field">
+              <label for="city">Ciudad</label>
+              <input class="input" type="text" id="city" name="city" />
+            </div>
+            <div class="field">
+              <label for="bio">Bio</label>
+              <textarea class="textarea" id="bio" name="bio"></textarea>
+            </div>
+
+            <div id="trainer-fields" hidden>
+              <div class="field">
+                <label for="modality">Modalidad</label>
+                <select class="select" id="modality" name="modality">
+                  <option value="">Sin especificar</option>
+                  <option value="presencial">Presencial</option>
+                  <option value="online">Online</option>
+                  <option value="ambos">Presencial y online</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="specialties">Especialidades (separadas por coma)</label>
+                <input class="input" type="text" id="specialties" name="specialties" placeholder="Ej: funcional, running, fuerza" />
+              </div>
+              <div class="field">
+                <label for="years_experience">Años de experiencia</label>
+                <input class="input" type="number" min="0" id="years_experience" name="years_experience" />
+              </div>
+              <div class="field">
+                <label for="certifications">Certificaciones</label>
+                <textarea class="textarea" id="certifications" name="certifications"></textarea>
+              </div>
+            </div>
+
+            <button class="btn btn--primary" type="submit">Guardar cambios</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2 style="margin-bottom: 12px">Cambiar contraseña</h2>
+          <form id="password-form">
+            <div class="field">
+              <label for="new-password">Contraseña nueva</label>
+              <input
+                class="input"
+                type="password"
+                id="new-password"
+                name="password"
+                minlength="6"
+                required
+                autocomplete="new-password"
+              />
+            </div>
+            <button class="btn btn--outline" type="submit">Actualizar contraseña</button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script type="module" src="js/pages/account.js"></script>
+  </body>
+</html>

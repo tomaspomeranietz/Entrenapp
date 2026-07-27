@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preparador — Entrenapp</title>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+  </head>
+  <body>
+    <header class="site-header"><site-header></site-header></header>
+
+    <main class="page-main">
+      <div class="container">
+        <section id="trainer-hero" class="section">
+          <div class="card skeleton" style="height: 220px"></div>
+        </section>
+
+        <section class="section" id="trainer-content" hidden>
+          <div class="split">
+            <div>
+              <div class="card" style="margin-bottom: 24px">
+                <h2>Rutinas</h2>
+                <div id="routines-list"></div>
+              </div>
+              <div class="card">
+                <h2>Reseñas</h2>
+                <div id="review-form-slot"></div>
+                <div id="reviews-list"></div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom: 24px">
+                <h3>Precios</h3>
+                <div id="pricing-list"></div>
+              </div>
+              <div class="card">
+                <h3>Turnos disponibles</h3>
+                <div id="availability-list"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div id="not-found" class="empty-state" hidden>
+          <span class="empty-state__emoji">🤷</span>
+          <p>No encontramos este perfil.</p>
+          <a class="btn btn--outline" href="index.html">Volver al directorio</a>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <span>Entrenapp</span>
+        <a href="index.html">Volver al directorio</a>
+      </div>
+    </footer>
+
+    <script type="module" src="js/pages/trainer-profile.js"></script>
+  </body>
+</html>
