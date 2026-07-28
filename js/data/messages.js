@@ -25,7 +25,7 @@ export async function getOrCreateConversation(otherId, myId) {
 }
 
 // Igual que en reviews.js: el nombre/avatar del otro participante se busca
-// aparte contra la vista pública profile_identities, porque desde sql/006
+// aparte contra la función get_profile_identities, porque desde sql/006
 // un perfil de alumno ya no se puede leer completo salvo que seas vos mismo.
 export async function listMyConversations(userId) {
   const { data: conversations, error } = await supabase
@@ -37,7 +37,7 @@ export async function listMyConversations(userId) {
   if (!conversations.length) return conversations;
 
   const peopleIds = [...new Set(conversations.flatMap((c) => [c.student_id, c.trainer_id]))];
-  const { data: people } = await supabase.from("profile_identities").select("id, full_name, avatar_url").in("id", peopleIds);
+  const { data: people } = await supabase.rpc("get_profile_identities", { profile_ids: peopleIds });
   const byId = new Map((people || []).map((p) => [p.id, p]));
 
   return conversations.map((c) => ({

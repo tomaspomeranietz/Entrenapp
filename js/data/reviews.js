@@ -1,9 +1,10 @@
 import { supabase } from "../supabaseClient.js";
 
-// El nombre/avatar del alumno se pide aparte contra la vista pública
-// profile_identities (no contra profiles directo): desde sql/006, un perfil
-// de alumno solo se puede leer completo siendo uno mismo, así que el embed
-// directo de PostgREST contra profiles ya no devolvería nada para otro alumno.
+// El nombre/avatar del alumno se pide aparte contra la función
+// get_profile_identities (no contra profiles directo): desde sql/006, un
+// perfil de alumno solo se puede leer completo siendo uno mismo, así que el
+// embed directo de PostgREST contra profiles ya no devolvería nada para
+// otro alumno.
 export async function listReviewsForTrainer(trainerId) {
   const { data: reviews, error } = await supabase
     .from("reviews")
@@ -13,10 +14,9 @@ export async function listReviewsForTrainer(trainerId) {
   if (error) throw error;
   if (!reviews.length) return reviews;
 
-  const { data: students } = await supabase
-    .from("profile_identities")
-    .select("id, full_name, avatar_url")
-    .in("id", reviews.map((r) => r.student_id));
+  const { data: students } = await supabase.rpc("get_profile_identities", {
+    profile_ids: reviews.map((r) => r.student_id),
+  });
   const byId = new Map((students || []).map((s) => [s.id, s]));
 
   return reviews.map((r) => ({ ...r, student: byId.get(r.student_id) || null }));
