@@ -3,7 +3,9 @@ import { supabase } from "../supabaseClient.js";
 // Directorio público de preparadores, con rating promedio mezclado del lado
 // del cliente (trainer_rating_summary es una vista sin FK directa a profiles,
 // así que no se puede pedir embebida en el mismo select).
-export async function listTrainers({ search = "" } = {}) {
+// modality: "presencial" o "online" muestra también a los que dan "ambos"
+// (el alumno busca "¿este me sirve?", no "¿da nada más que esto?").
+export async function listTrainers({ search = "", modality = "" } = {}) {
   let query = supabase
     .from("profiles")
     .select("id, full_name, avatar_url, bio, city, modality, specialties, current_focus, current_focus_updated_at")
@@ -13,6 +15,9 @@ export async function listTrainers({ search = "" } = {}) {
   const term = search.trim();
   if (term) {
     query = query.or(`full_name.ilike.%${term}%,city.ilike.%${term}%`);
+  }
+  if (modality === "presencial" || modality === "online") {
+    query = query.or(`modality.eq.${modality},modality.eq.ambos`);
   }
 
   const { data: trainers, error } = await query;

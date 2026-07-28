@@ -8,11 +8,14 @@ import { showError } from "../utils/toast.js";
 const grid = $("#trainers-grid");
 const searchForm = $("#search-form");
 const resultsTitle = $("#results-title");
+const modalityFilters = $("#modality-filters");
+
+let currentModality = "";
 
 async function loadTrainers(search = "") {
   grid.innerHTML = skeletonCards();
   try {
-    const trainers = await listTrainers({ search });
+    const trainers = await listTrainers({ search, modality: currentModality });
     renderTrainers(trainers, search);
   } catch (err) {
     console.error(err);
@@ -25,10 +28,11 @@ function renderTrainers(trainers, search) {
   resultsTitle.textContent = search ? `Preparadores · "${search}"` : "Preparadores";
 
   if (!trainers.length) {
+    const hasFilters = Boolean(search) || Boolean(currentModality);
     grid.innerHTML = `
       <div class="empty-state" style="grid-column:1/-1;">
         <span class="empty-state__emoji">🔍</span>
-        <p>${search ? "No encontramos preparadores para esa búsqueda." : "Todavía no hay preparadores registrados."}</p>
+        <p>${hasFilters ? "No encontramos preparadores para esa búsqueda." : "Todavía no hay preparadores registrados."}</p>
       </div>
     `;
     return;
@@ -77,6 +81,15 @@ function skeletonCards() {
 
 searchForm.addEventListener("submit", (e) => {
   e.preventDefault();
+  const search = new FormData(searchForm).get("search")?.toString() || "";
+  loadTrainers(search);
+});
+
+modalityFilters.addEventListener("click", (e) => {
+  const btn = e.target.closest(".filter-chip");
+  if (!btn) return;
+  currentModality = btn.dataset.modality;
+  modalityFilters.querySelectorAll(".filter-chip").forEach((b) => b.classList.toggle("is-active", b === btn));
   const search = new FormData(searchForm).get("search")?.toString() || "";
   loadTrainers(search);
 });

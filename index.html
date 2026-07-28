@@ -3,11 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
     <title>Entrenapp — Encontrá tu preparador físico</title>
     <meta
       name="description"
       content="Buscá preparadores físicos freelance, mirá reseñas, rutinas, turnos y precios, y consultales directo por mensaje."
     />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Entrenapp — Encontrá tu preparador físico" />
+    <meta
+      property="og:description"
+      content="Buscá preparadores físicos freelance, mirá reseñas, rutinas, turnos y precios, y consultales directo por mensaje."
+    />
+    <meta property="og:image" content="assets/img/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/layout.css" />
@@ -32,6 +42,11 @@
             />
             <button class="btn btn--primary" type="submit">Buscar</button>
           </form>
+          <div id="modality-filters" class="filter-chips" role="group" aria-label="Filtrar por modalidad">
+            <button class="filter-chip is-active" type="button" data-modality="">Todos</button>
+            <button class="filter-chip" type="button" data-modality="presencial">Presencial</button>
+            <button class="filter-chip" type="button" data-modality="online">Online</button>
+          </div>
         </section>
 
         <section class="section">
