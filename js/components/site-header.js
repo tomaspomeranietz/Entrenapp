@@ -8,7 +8,7 @@ class SiteHeader extends HTMLElement {
   async connectedCallback() {
     this.innerHTML = `
       <a class="site-header__logo" href="index.html">
-        <span class="site-header__logo-mark">💪</span>
+        <img class="site-header__logo-mark" src="assets/img/icon-512.png" alt="" width="32" height="32" />
         Entrenapp
       </a>
       <button class="site-header__toggle" type="button" aria-label="Abrir menú" aria-expanded="false">

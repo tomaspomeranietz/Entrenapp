@@ -9,10 +9,10 @@
   --color-text-secondary: #5b6270;
   --color-text-faint: #8a909c;
 
-  --color-brand: #ff5a1f;
-  --color-brand-dark: #e64c15;
-  --color-brand-tint: #fff1ea;
-  --color-ink: #14161a;
+  --color-brand: #14b8a6;
+  --color-brand-dark: #0d9488;
+  --color-brand-tint: #e6faf6;
+  --color-ink: #0f141c;
 
   --color-success: #16a34a;
   --color-success-tint: #eafaf0;
@@ -58,7 +58,7 @@
     --color-text-secondary: #a6acb8;
     --color-text-faint: #767c88;
 
-    --color-brand-tint: #2a1c14;
+    --color-brand-tint: #0e2b28;
     --color-success-tint: #10261b;
     --color-danger-tint: #2a1414;
     --color-promo-tint: #2a2110;
