@@ -3,6 +3,7 @@ import "../components/star-rating.js";
 import { requireRole } from "../guard.js";
 import { getMyProfile, updateCurrentFocus } from "../data/profiles.js";
 import { listMyRoutines, createRoutine, updateRoutine, deleteRoutine } from "../data/routines.js";
+import { uploadRoutineMedia, deleteRoutineMedia } from "../data/routine-media.js";
 import {
   listMyAvailability,
   createSlot,
@@ -139,7 +140,11 @@ async function refreshRoutines(trainerId) {
       (r) => `
       <div class="dashboard-row" data-id="${r.id}">
         <div class="dashboard-row__main">
-          <div class="dashboard-row__title">${escapeHtml(r.title)} ${r.is_published ? "" : `<span class="badge">Oculta</span>`}</div>
+          <div class="dashboard-row__title">
+            ${escapeHtml(r.title)}
+            ${r.is_published ? "" : `<span class="badge">Oculta</span>`}
+            ${r.routine_media?.length ? `<span class="badge">📷 ${r.routine_media.length}</span>` : ""}
+          </div>
           <div class="text-secondary" style="font-size:.85rem;">${[r.level ? levelLabel(r.level) : null, r.description ? truncate(r.description, 80) : null]
             .filter(Boolean)
             .map(escapeHtml)
@@ -192,10 +197,22 @@ function openRoutineModal(trainerId, routine = null) {
         <input type="checkbox" id="r-published" name="is_published" ${!routine || routine.is_published ? "checked" : ""} style="width:auto;" />
         <label for="r-published" style="margin:0;">Publicada (visible para alumnos)</label>
       </div>
+      <div class="field">
+        <label>Fotos y videos</label>
+        ${
+          isEdit
+            ? `<div class="media-grid" id="media-grid">${renderMediaGrid(routine.routine_media || [])}</div>
+               <input type="file" id="r-media-input" accept="image/*,video/*" multiple style="margin-top:8px;" />
+               <span class="field-hint">Hasta 50MB por archivo.</span>`
+            : `<span class="field-hint">Podés sumarle fotos y videos apenas la crees.</span>`
+        }
+      </div>
       <button class="btn btn--primary" type="submit">${isEdit ? "Guardar cambios" : "Publicar rutina"}</button>
     </form>
   `
   );
+
+  if (isEdit) bindMediaManager(trainerId, routine);
 
   $("#routine-form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -209,16 +226,92 @@ function openRoutineModal(trainerId, routine = null) {
         description: values.description?.trim() || null,
         is_published: e.target.querySelector("#r-published").checked,
       };
-      if (isEdit) await updateRoutine(routine.id, fields);
-      else await createRoutine(trainerId, fields);
-      showSuccess(isEdit ? "Rutina actualizada." : "Rutina publicada.");
-      closeModal();
-      refreshRoutines(trainerId);
+      if (isEdit) {
+        await updateRoutine(routine.id, fields);
+        showSuccess("Rutina actualizada.");
+        closeModal();
+        refreshRoutines(trainerId);
+      } else {
+        const created = await createRoutine(trainerId, fields);
+        showSuccess("Rutina publicada.");
+        refreshRoutines(trainerId);
+        openRoutineModal(trainerId, { ...created, routine_media: [] });
+      }
     } catch (err) {
       console.error(err);
       showError("No pudimos guardar la rutina.");
       btn.disabled = false;
     }
+  });
+}
+
+function renderMediaGrid(media) {
+  if (!media.length) return `<p class="text-secondary" style="font-size:.85rem;">Todavía no subiste nada.</p>`;
+  return media
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map(
+      (m) => `
+      <div class="media-thumb" data-media-id="${m.id}">
+        ${
+          m.media_type === "video"
+            ? `<video src="${escapeHtml(m.url)}" preload="metadata" muted></video>`
+            : `<img src="${escapeHtml(m.url)}" alt="" />`
+        }
+        <button type="button" class="media-thumb__remove" data-action="remove-media" aria-label="Borrar">✕</button>
+      </div>
+    `
+    )
+    .join("");
+}
+
+// Sube y borra fotos/video al toque (no espera al submit del form de la
+// rutina) para que el trainer vea el resultado enseguida.
+function bindMediaManager(trainerId, routine) {
+  let media = routine.routine_media || [];
+  const grid = $("#media-grid");
+  const input = $("#r-media-input");
+
+  const rerender = () => {
+    grid.innerHTML = renderMediaGrid(media);
+    bindRemoveButtons();
+  };
+
+  function bindRemoveButtons() {
+    grid.querySelectorAll("[data-action='remove-media']").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.closest("[data-media-id]").dataset.mediaId;
+        const item = media.find((m) => m.id === id);
+        btn.disabled = true;
+        try {
+          await deleteRoutineMedia(item);
+          media = media.filter((m) => m.id !== id);
+          rerender();
+          refreshRoutines(trainerId);
+        } catch (err) {
+          console.error(err);
+          showError("No pudimos borrar el archivo.");
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+  bindRemoveButtons();
+
+  input.addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files);
+    e.target.value = "";
+    for (const file of files) {
+      try {
+        const created = await uploadRoutineMedia(trainerId, routine.id, file, media.length);
+        media = [...media, created];
+        rerender();
+      } catch (err) {
+        console.error(err);
+        showError(err.message || "No pudimos subir el archivo.");
+      }
+    }
+    refreshRoutines(trainerId);
   });
 }
 
@@ -439,7 +532,7 @@ async function refreshReviews(trainerId) {
 
   list.innerHTML = reviews
     .map((r) => {
-      const reply = r.review_replies?.[0];
+      const reply = r.review_replies;
       return `
       <div class="list-item review" data-review-id="${r.id}">
         <div class="review__head">
@@ -469,7 +562,7 @@ async function refreshReviews(trainerId) {
       const row = btn.closest("[data-review-id]");
       const reviewId = row.dataset.reviewId;
       const review = reviews.find((r) => r.id === reviewId);
-      openReplyForm(row, trainerId, reviewId, review.review_replies?.[0]?.body || "");
+      openReplyForm(row, trainerId, reviewId, review.review_replies?.body || "");
     });
   });
 

@@ -11,6 +11,11 @@ class SiteHeader extends HTMLElement {
         <span class="site-header__logo-mark">💪</span>
         Entrenapp
       </a>
+      <button class="site-header__toggle" type="button" aria-label="Abrir menú" aria-expanded="false">
+        <span class="site-header__toggle-bar"></span>
+        <span class="site-header__toggle-bar"></span>
+        <span class="site-header__toggle-bar"></span>
+      </button>
       <nav class="site-header__nav" aria-label="Principal"></nav>
     `;
     const nav = this.querySelector(".site-header__nav");
@@ -30,10 +35,10 @@ class SiteHeader extends HTMLElement {
       `;
     }
 
-    const dashboardLink =
-      profile.role === "preparador"
-        ? `<a class="site-header__link" href="dashboard-trainer.html">Mi panel</a>`
-        : `<a class="site-header__link" href="index.html">Preparadores</a>`;
+    const isTrainer = profile.role === "preparador";
+    const dashboardLink = isTrainer
+      ? `<a class="site-header__link" href="dashboard-trainer.html">Mi panel</a>`
+      : `<a class="site-header__link" href="index.html">Preparadores</a>`;
 
     const initial = escapeHtml((profile.full_name || "?").trim().slice(0, 1).toUpperCase());
     const avatarInner = profile.avatar_url
@@ -41,6 +46,9 @@ class SiteHeader extends HTMLElement {
       : initial;
 
     return `
+      <span class="badge ${isTrainer ? "badge--role-preparador" : "badge--role-alumno"} site-header__role">
+        ${isTrainer ? "Estás en un perfil de preparador físico" : "Estás en un perfil de alumno"}
+      </span>
       ${dashboardLink}
       <a class="site-header__link" href="messages.html">Mensajes</a>
       <a href="account.html" title="Mi cuenta" aria-label="Mi cuenta">
@@ -51,6 +59,22 @@ class SiteHeader extends HTMLElement {
   }
 
   bindEvents(nav) {
+    const toggle = this.querySelector(".site-header__toggle");
+    toggle.addEventListener("click", () => {
+      const isOpen = !nav.classList.contains("is-open");
+      nav.classList.toggle("is-open", isOpen);
+      toggle.classList.toggle("is-open", isOpen);
+      toggle.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    // En mobile el nav es un dropdown: cerrarlo al navegar o al tocar afuera.
+    nav.addEventListener("click", (e) => {
+      if (e.target.closest("a")) this.closeMenu(nav, toggle);
+    });
+    document.addEventListener("click", (e) => {
+      if (nav.classList.contains("is-open") && !this.contains(e.target)) this.closeMenu(nav, toggle);
+    });
+
     const logoutBtn = nav.querySelector('[data-action="logout"]');
     if (!logoutBtn) return;
     logoutBtn.addEventListener("click", async () => {
@@ -58,6 +82,12 @@ class SiteHeader extends HTMLElement {
       await signOut();
       location.href = "index.html";
     });
+  }
+
+  closeMenu(nav, toggle) {
+    nav.classList.remove("is-open");
+    toggle.classList.remove("is-open");
+    toggle.setAttribute("aria-expanded", "false");
   }
 }
 

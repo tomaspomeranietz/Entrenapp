@@ -122,10 +122,25 @@ function renderRoutines(routines) {
           ${r.level ? `<span class="badge">${escapeHtml(levelLabel(r.level))}</span>` : ""}
         </div>
         ${r.description ? `<p class="text-secondary" style="margin-top:8px;">${escapeHtml(r.description)}</p>` : ""}
+        ${renderRoutineMedia(r.routine_media)}
       </div>
     `
     )
     .join("");
+}
+
+function renderRoutineMedia(media) {
+  if (!media || !media.length) return "";
+  const items = media
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((m) =>
+      m.media_type === "video"
+        ? `<video src="${escapeHtml(m.url)}" preload="metadata" controls playsinline></video>`
+        : `<img src="${escapeHtml(m.url)}" alt="" loading="lazy" />`
+    )
+    .join("");
+  return `<div class="media-gallery">${items}</div>`;
 }
 
 function renderPricing(items) {
@@ -176,7 +191,7 @@ function renderReviews(reviews) {
   }
   list.innerHTML = reviews
     .map((r) => {
-      const reply = r.review_replies?.[0];
+      const reply = r.review_replies;
       const studentAvatar = r.student?.avatar_url
         ? `<img src="${escapeHtml(r.student.avatar_url)}" alt="">`
         : escapeHtml(initials(r.student?.full_name));
