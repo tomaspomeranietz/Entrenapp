@@ -9,16 +9,21 @@ await redirectIfAuthenticated();
 const form = $("#signup-form");
 const cityField = $("#city-field");
 const cityInput = $("#signup-city");
+const explainerAlumno = $("#explainer-alumno");
+const explainerPreparador = $("#explainer-preparador");
 
 // La ciudad es obligatoria para preparador (para que el directorio sirva
-// de algo) pero no tiene sentido pedírsela a un alumno.
-function syncCityField() {
+// de algo) pero no tiene sentido pedírsela a un alumno. De paso, el texto
+// de "para qué sirve" de abajo cambia según qué rol esté eligiendo.
+function syncRoleUI() {
   const isTrainer = form.querySelector('input[name="role"]:checked')?.value === "preparador";
   cityField.hidden = !isTrainer;
   cityInput.required = isTrainer;
+  explainerAlumno.hidden = isTrainer;
+  explainerPreparador.hidden = !isTrainer;
 }
-form.querySelectorAll('input[name="role"]').forEach((r) => r.addEventListener("change", syncCityField));
-syncCityField();
+form.querySelectorAll('input[name="role"]').forEach((r) => r.addEventListener("change", syncRoleUI));
+syncRoleUI();
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();

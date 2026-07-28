@@ -284,6 +284,22 @@
   }
 }
 
+/* ---------- Explicación de la app (login/signup) ---------- */
+
+.explainer-intro {
+  max-width: 560px;
+  margin: var(--space-7) auto 0;
+  text-align: center;
+}
+
+.explainer-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  max-width: 720px;
+  margin: var(--space-4) auto 0;
+}
+
 /* ---------- Chat (messages.html) ---------- */
 
 .chat-layout {

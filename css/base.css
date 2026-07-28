@@ -77,6 +77,13 @@
   box-sizing: border-box;
 }
 
+/* Sin esto, cualquier elemento con class="field" (display:flex) u otras
+   clases que fijan `display` gana por especificidad al atributo `hidden`
+   del navegador y termina visible igual. */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   padding: 0;
