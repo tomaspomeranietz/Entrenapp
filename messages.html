@@ -25,19 +25,25 @@
           <div class="chat-thread">
             <div style="padding: 12px; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: 8px">
               <button class="btn btn--ghost btn--icon chat-back-button" id="chat-back" type="button" aria-label="Volver a la lista">←</button>
-              <div id="thread-header" style="font-weight: 600">Elegí una conversación</div>
+              <div id="thread-header" style="font-weight: 600; flex: 1">Elegí una conversación</div>
+              <div id="thread-actions" style="display: flex; gap: 4px" hidden>
+                <button class="btn btn--ghost btn--sm" id="report-user-btn" type="button">Reportar</button>
+                <button class="btn btn--ghost btn--sm" id="block-user-btn" type="button">Bloquear</button>
+              </div>
             </div>
             <div class="chat-thread__messages" id="thread-messages">
               <p class="text-secondary" style="margin: auto">Elegí una conversación de la lista para ver los mensajes.</p>
             </div>
             <form class="chat-thread__composer" id="composer" hidden>
-              <input class="input" type="text" id="composer-input" placeholder="Escribí un mensaje…" autocomplete="off" />
+              <input class="input" type="text" id="composer-input" placeholder="Escribí un mensaje…" autocomplete="off" maxlength="2000" />
               <button class="btn btn--primary btn--icon" type="submit" aria-label="Enviar mensaje">➤</button>
             </form>
           </div>
         </div>
       </div>
     </main>
+
+    <div id="modal-root"></div>
 
     <script type="module" src="js/pages/messages.js"></script>
   </body>

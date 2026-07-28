@@ -5,12 +5,15 @@ import { listPublishedRoutines } from "../data/routines.js";
 import { listActivePricing } from "../data/pricing.js";
 import { listUpcomingAvailability } from "../data/availability.js";
 import { listReviewsForTrainer, getMyReviewFor, upsertMyReview } from "../data/reviews.js";
+import { blockUser, unblockUser, isBlockedEitherWay, reportContent } from "../data/moderation.js";
 import { getSessionAndProfile } from "../guard.js";
 import { $, escapeHtml } from "../utils/dom.js";
 import { initials, modalityLabel, levelLabel, formatCurrency, formatTimeRange, formatRelativeTime } from "../utils/format.js";
 import { showError, showSuccess } from "../utils/toast.js";
+import { openModal, closeModal } from "../utils/modal.js";
 
 const trainerId = new URLSearchParams(location.search).get("id");
+let currentViewer = { session: null, profile: null };
 
 if (!trainerId) {
   showNotFound();
@@ -38,6 +41,7 @@ async function init(id) {
     listReviewsForTrainer(id).catch(() => []),
     getSessionAndProfile(),
   ]);
+  currentViewer = viewer;
 
   renderRoutines(routines);
   renderPricing(pricing);
@@ -97,14 +101,77 @@ function renderHero(trainer) {
   `;
 }
 
-function renderMessageCta(viewer, trainerId) {
+async function renderMessageCta(viewer, trainerId) {
   const el = $("#message-cta");
   const isSelf = viewer.profile && viewer.profile.id === trainerId;
   if (viewer.profile && viewer.profile.role === "alumno" && !isSelf) {
-    el.innerHTML = `<a class="btn btn--primary" href="messages.html?with=${encodeURIComponent(trainerId)}">Mandar mensaje</a>`;
+    el.innerHTML = `
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <a class="btn btn--primary" href="messages.html?with=${encodeURIComponent(trainerId)}">Mandar mensaje</a>
+        <button class="btn btn--ghost btn--sm" type="button" id="report-trainer-btn">Reportar</button>
+        <button class="btn btn--ghost btn--sm" type="button" id="block-trainer-btn">Bloquear</button>
+      </div>
+    `;
+    $("#report-trainer-btn").addEventListener("click", () => openReportModal("user", trainerId, "este preparador"));
+
+    const blockBtn = $("#block-trainer-btn");
+    let blockedByMe = false;
+    try {
+      blockedByMe = (await isBlockedEitherWay(viewer.profile.id, trainerId)).blockedByMe;
+    } catch (err) {
+      console.error(err);
+    }
+    blockBtn.textContent = blockedByMe ? "Desbloquear" : "Bloquear";
+    blockBtn.addEventListener("click", async () => {
+      try {
+        if (blockedByMe) {
+          await unblockUser(viewer.profile.id, trainerId);
+          showSuccess("Desbloqueado.");
+        } else {
+          if (!confirm("¿Bloquear a este preparador? No te va a poder volver a escribir.")) return;
+          await blockUser(viewer.profile.id, trainerId);
+          showSuccess("Bloqueado.");
+        }
+        renderMessageCta(viewer, trainerId);
+      } catch (err) {
+        console.error(err);
+        showError("No pudimos actualizar el bloqueo.");
+      }
+    });
   } else if (!viewer.session) {
     el.innerHTML = `<a class="btn btn--primary" href="login.html?redirect=${encodeURIComponent(location.pathname + location.search)}">Ingresá para consultar</a>`;
   }
+}
+
+function openReportModal(targetType, targetId, label) {
+  openModal(
+    `Reportar ${label}`,
+    `
+    <form id="report-form">
+      <div class="field">
+        <label for="report-reason">Contanos qué pasó</label>
+        <textarea class="textarea" id="report-reason" name="reason" required maxlength="500" placeholder="Describí el problema…"></textarea>
+      </div>
+      <button class="btn btn--primary" type="submit">Enviar reporte</button>
+    </form>
+  `
+  );
+  $("#report-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const reason = $("#report-reason").value.trim();
+    if (!reason || !currentViewer.profile) return;
+    btn.disabled = true;
+    try {
+      await reportContent(currentViewer.profile.id, targetType, targetId, reason);
+      showSuccess("Reporte enviado. Gracias por avisar.");
+      closeModal();
+    } catch (err) {
+      console.error(err);
+      showError("No pudimos enviar el reporte.");
+      btn.disabled = false;
+    }
+  });
 }
 
 function renderRoutines(routines) {
@@ -224,7 +291,7 @@ function renderReviews(reviews) {
         ? `<img src="${escapeHtml(r.student.avatar_url)}" alt="">`
         : escapeHtml(initials(r.student?.full_name));
       return `
-        <div class="list-item review">
+        <div class="list-item review" data-review-id="${r.id}">
           <div class="review__head">
             <span class="avatar" style="width:36px;height:36px;font-size:.8rem;">${studentAvatar}</span>
             <div>
@@ -242,10 +309,22 @@ function renderReviews(reviews) {
                 </div>`
               : ""
           }
+          ${
+            currentViewer.session
+              ? `<button class="btn btn--ghost btn--sm" type="button" data-action="report-review" style="margin-top:4px;">Reportar</button>`
+              : ""
+          }
         </div>
       `;
     })
     .join("");
+
+  list.querySelectorAll("[data-action='report-review']").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const reviewId = btn.closest("[data-review-id]").dataset.reviewId;
+      openReportModal("review", reviewId, "esta reseña");
+    });
+  });
 }
 
 function renderReviewForm(trainerId, studentId) {
@@ -263,7 +342,7 @@ function renderReviewForm(trainerId, studentId) {
           </div>
           <div class="field">
             <label for="review-comment">Tu comentario (opcional)</label>
-            <textarea class="textarea" id="review-comment" name="comment">${existing?.comment ? escapeHtml(existing.comment) : ""}</textarea>
+            <textarea class="textarea" id="review-comment" name="comment" maxlength="1000">${existing?.comment ? escapeHtml(existing.comment) : ""}</textarea>
           </div>
           <button class="btn btn--primary" type="submit">${existing ? "Actualizar reseña" : "Publicar reseña"}</button>
         </form>

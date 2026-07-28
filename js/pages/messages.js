@@ -7,9 +7,11 @@ import {
   sendMessage,
   subscribeToConversation,
 } from "../data/messages.js";
+import { blockUser, unblockUser, isBlockedEitherWay, reportContent } from "../data/moderation.js";
 import { $, escapeHtml } from "../utils/dom.js";
 import { initials, formatMessageTime, formatRelativeTime } from "../utils/format.js";
-import { showError } from "../utils/toast.js";
+import { showError, showSuccess } from "../utils/toast.js";
+import { openModal, closeModal } from "../utils/modal.js";
 
 let unsubscribe = null;
 let activeConversationId = null;
@@ -101,7 +103,6 @@ async function openThread(conv, conversations) {
 
   const other = otherParticipant(conv);
   $("#thread-header").textContent = other?.full_name || "Conversación";
-  $("#composer").hidden = false;
 
   const messagesEl = $("#thread-messages");
   messagesEl.innerHTML = `<div class="skeleton" style="height:40px;"></div>`;
@@ -109,8 +110,79 @@ async function openThread(conv, conversations) {
   const messages = await listMessages(conv.id).catch(() => []);
   renderMessages(messages);
 
+  if (other?.id) await setupThreadActions(other);
+  else $("#thread-actions").hidden = true;
+
   if (unsubscribe) unsubscribe();
   unsubscribe = subscribeToConversation(conv.id, (msg) => appendMessage(msg));
+}
+
+async function setupThreadActions(other) {
+  const actions = $("#thread-actions");
+  actions.hidden = false;
+
+  let blockInfo;
+  try {
+    blockInfo = await isBlockedEitherWay(userId, other.id);
+  } catch (err) {
+    console.error(err);
+    blockInfo = { blocked: false, blockedByMe: false };
+  }
+  $("#composer").hidden = blockInfo.blocked;
+
+  const blockBtn = $("#block-user-btn");
+  blockBtn.textContent = blockInfo.blockedByMe ? "Desbloquear" : "Bloquear";
+  blockBtn.onclick = async () => {
+    try {
+      if (blockInfo.blockedByMe) {
+        await unblockUser(userId, other.id);
+        showSuccess(`Desbloqueaste a ${other.full_name}.`);
+      } else {
+        if (!confirm(`¿Bloquear a ${other.full_name}? No te va a poder volver a escribir.`)) return;
+        await blockUser(userId, other.id);
+        showSuccess(`Bloqueaste a ${other.full_name}.`);
+      }
+      const refreshed = await listMyConversations(userId).catch(() => []);
+      const conv = refreshed.find((c) => c.id === activeConversationId);
+      if (conv) openThread(conv, refreshed);
+    } catch (err) {
+      console.error(err);
+      showError("No pudimos actualizar el bloqueo.");
+    }
+  };
+
+  $("#report-user-btn").onclick = () => openReportModal(other);
+}
+
+function openReportModal(other) {
+  openModal(
+    `Reportar a ${other.full_name}`,
+    `
+    <form id="report-form">
+      <div class="field">
+        <label for="report-reason">Contanos qué pasó</label>
+        <textarea class="textarea" id="report-reason" name="reason" required maxlength="500" placeholder="Describí el problema…"></textarea>
+      </div>
+      <button class="btn btn--primary" type="submit">Enviar reporte</button>
+    </form>
+  `
+  );
+  $("#report-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const reason = $("#report-reason").value.trim();
+    if (!reason) return;
+    btn.disabled = true;
+    try {
+      await reportContent(userId, "user", other.id, reason);
+      showSuccess("Reporte enviado. Gracias por avisar.");
+      closeModal();
+    } catch (err) {
+      console.error(err);
+      showError("No pudimos enviar el reporte.");
+      btn.disabled = false;
+    }
+  });
 }
 
 function renderMessages(messages) {

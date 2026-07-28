@@ -94,3 +94,41 @@ export async function uploadAvatar(userId, file) {
   await updateProfile(userId, { avatar_url: data.publicUrl });
   return data.publicUrl;
 }
+
+// "Borrar cuenta": no hay forma de que el propio cliente borre su fila de
+// auth.users (hace falta la service_role key, que nunca vive en el
+// navegador), así que esto borra todo lo que sí puede borrar por RLS y
+// vacía el perfil. El login en sí queda; si alguien pide la baja total,
+// se borra a mano desde Authentication → Users en el dashboard de Supabase.
+export async function deleteMyAccount(userId, role) {
+  if (role === "preparador") {
+    await supabase.from("routines").delete().eq("trainer_id", userId);
+    await supabase.from("availability_slots").delete().eq("trainer_id", userId);
+    await supabase.from("pricing_items").delete().eq("trainer_id", userId);
+    await supabase.from("review_replies").delete().eq("trainer_id", userId);
+  } else {
+    await supabase.from("reviews").delete().eq("student_id", userId);
+  }
+
+  const { data: files } = await supabase.storage.from("avatars").list(userId);
+  if (files?.length) {
+    await supabase.storage.from("avatars").remove(files.map((f) => `${userId}/${f.name}`));
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      full_name: "Usuario eliminado",
+      avatar_url: null,
+      bio: null,
+      city: null,
+      modality: null,
+      specialties: null,
+      years_experience: null,
+      certifications: null,
+      current_focus: null,
+      current_focus_updated_at: null,
+    })
+    .eq("id", userId);
+  if (error) throw error;
+}

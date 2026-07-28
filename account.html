@@ -29,15 +29,15 @@
           <form id="profile-form">
             <div class="field">
               <label for="full_name">Nombre y apellido</label>
-              <input class="input" type="text" id="full_name" name="full_name" required />
+              <input class="input" type="text" id="full_name" name="full_name" required maxlength="100" />
             </div>
             <div class="field">
               <label for="city">Ciudad</label>
-              <input class="input" type="text" id="city" name="city" />
+              <input class="input" type="text" id="city" name="city" maxlength="100" />
             </div>
             <div class="field">
               <label for="bio">Bio</label>
-              <textarea class="textarea" id="bio" name="bio"></textarea>
+              <textarea class="textarea" id="bio" name="bio" maxlength="500"></textarea>
             </div>
 
             <div id="trainer-fields" hidden>
@@ -52,7 +52,14 @@
               </div>
               <div class="field">
                 <label for="specialties">Especialidades (separadas por coma)</label>
-                <input class="input" type="text" id="specialties" name="specialties" placeholder="Ej: funcional, running, fuerza" />
+                <input
+                  class="input"
+                  type="text"
+                  id="specialties"
+                  name="specialties"
+                  placeholder="Ej: funcional, running, fuerza"
+                  maxlength="300"
+                />
               </div>
               <div class="field">
                 <label for="years_experience">Años de experiencia</label>
@@ -60,7 +67,7 @@
               </div>
               <div class="field">
                 <label for="certifications">Certificaciones</label>
-                <textarea class="textarea" id="certifications" name="certifications"></textarea>
+                <textarea class="textarea" id="certifications" name="certifications" maxlength="500"></textarea>
               </div>
             </div>
 
@@ -85,6 +92,16 @@
             </div>
             <button class="btn btn--outline" type="submit">Actualizar contraseña</button>
           </form>
+        </div>
+
+        <div class="card" style="margin-top: 24px; border-color: var(--color-danger-tint)">
+          <h2 style="margin-bottom: 8px">Borrar mi cuenta</h2>
+          <p class="text-secondary" style="margin-bottom: 16px">
+            Borra tus rutinas, precios, turnos y reseñas, y vacía tu perfil (nombre, foto, bio). Los mensajes que ya
+            mandaste quedan en las conversaciones de la otra persona, pero sin tu nombre. Esta acción no se puede
+            deshacer.
+          </p>
+          <button class="btn btn--danger" type="button" id="delete-account-btn">Borrar mi cuenta</button>
         </div>
       </div>
     </main>

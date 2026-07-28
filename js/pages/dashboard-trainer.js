@@ -178,7 +178,7 @@ function openRoutineModal(trainerId, routine = null) {
     <form id="routine-form">
       <div class="field">
         <label for="r-title">Título</label>
-        <input class="input" id="r-title" name="title" required value="${routine ? escapeHtml(routine.title) : ""}" />
+        <input class="input" id="r-title" name="title" required maxlength="120" value="${routine ? escapeHtml(routine.title) : ""}" />
       </div>
       <div class="field">
         <label for="r-level">Nivel</label>
@@ -191,7 +191,7 @@ function openRoutineModal(trainerId, routine = null) {
       </div>
       <div class="field">
         <label for="r-desc">Descripción</label>
-        <textarea class="textarea" id="r-desc" name="description">${routine ? escapeHtml(routine.description || "") : ""}</textarea>
+        <textarea class="textarea" id="r-desc" name="description" maxlength="1000">${routine ? escapeHtml(routine.description || "") : ""}</textarea>
       </div>
       <div class="field" style="flex-direction:row; align-items:center; gap:8px;">
         <input type="checkbox" id="r-published" name="is_published" ${!routine || routine.is_published ? "checked" : ""} style="width:auto;" />
@@ -375,7 +375,7 @@ function openSlotModal(trainerId, slot = null) {
       </div>
       <div class="field">
         <label for="s-label">Descripción (opcional)</label>
-        <input class="input" type="text" id="s-label" name="label" placeholder="Ej: Funcional grupal" value="${slot?.label ? escapeHtml(slot.label) : ""}" />
+        <input class="input" type="text" id="s-label" name="label" placeholder="Ej: Funcional grupal" maxlength="100" value="${slot?.label ? escapeHtml(slot.label) : ""}" />
       </div>
       <button class="btn btn--primary" type="submit">${isEdit ? "Guardar cambios" : "Publicar turno"}</button>
     </form>
@@ -475,7 +475,7 @@ function openPriceModal(trainerId, item = null) {
     <form id="price-form">
       <div class="field">
         <label for="p-title">Título</label>
-        <input class="input" id="p-title" name="title" required value="${item ? escapeHtml(item.title) : ""}" placeholder="Ej: Plan mensual 3x semana" />
+        <input class="input" id="p-title" name="title" required maxlength="120" value="${item ? escapeHtml(item.title) : ""}" placeholder="Ej: Plan mensual 3x semana" />
       </div>
       <div class="field">
         <label for="p-price">Precio (dejalo vacío para "a consultar")</label>
@@ -483,7 +483,7 @@ function openPriceModal(trainerId, item = null) {
       </div>
       <div class="field">
         <label for="p-desc">Descripción (opcional)</label>
-        <textarea class="textarea" id="p-desc" name="description">${item ? escapeHtml(item.description || "") : ""}</textarea>
+        <textarea class="textarea" id="p-desc" name="description" maxlength="500">${item ? escapeHtml(item.description || "") : ""}</textarea>
       </div>
       <div class="field" style="flex-direction:row; align-items:center; gap:8px;">
         <input type="checkbox" id="p-promo" name="is_promo" ${item?.is_promo ? "checked" : ""} style="width:auto;" />
@@ -571,7 +571,7 @@ async function refreshReviews(trainerId) {
     slot.innerHTML = `
       <form class="reply-form" style="margin-top:8px;">
         <div class="field">
-          <textarea class="textarea" name="body" required placeholder="Escribí tu respuesta…">${escapeHtml(existingBody)}</textarea>
+          <textarea class="textarea" name="body" required maxlength="1000" placeholder="Escribí tu respuesta…">${escapeHtml(existingBody)}</textarea>
         </div>
         <button class="btn btn--primary btn--sm" type="submit">Guardar respuesta</button>
         <button class="btn btn--ghost btn--sm" type="button" data-action="cancel-reply">Cancelar</button>

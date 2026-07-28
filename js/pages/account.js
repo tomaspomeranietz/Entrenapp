@@ -1,7 +1,7 @@
 import "../components/site-header.js";
 import { requireAuth } from "../guard.js";
-import { getMyProfile, updateProfile, uploadAvatar } from "../data/profiles.js";
-import { updatePassword, translateAuthError } from "../auth.js";
+import { getMyProfile, updateProfile, uploadAvatar, deleteMyAccount } from "../data/profiles.js";
+import { updatePassword, translateAuthError, signOut } from "../auth.js";
 import { $, escapeHtml } from "../utils/dom.js";
 import { initials } from "../utils/format.js";
 import { showError, showSuccess } from "../utils/toast.js";
@@ -73,6 +73,20 @@ async function main() {
       showError(translateAuthError(err));
     } finally {
       btn.disabled = false;
+    }
+  });
+
+  $("#delete-account-btn").addEventListener("click", async () => {
+    if (!confirm("¿Seguro que querés borrar tu cuenta? No se puede deshacer.")) return;
+    if (!confirm("Última confirmación: se borran tus rutinas, precios, turnos y reseñas, y se vacía tu perfil. ¿Continuar?"))
+      return;
+    try {
+      await deleteMyAccount(userId, profile.role);
+      await signOut();
+      location.href = "index.html";
+    } catch (err) {
+      console.error(err);
+      showError("No pudimos borrar la cuenta. Probá de nuevo en un rato.");
     }
   });
 }
