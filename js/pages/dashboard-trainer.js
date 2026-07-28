@@ -15,7 +15,15 @@ import { listMyPricing, createPricingItem, updatePricingItem, deletePricingItem 
 import { listReviewsForTrainer } from "../data/reviews.js";
 import { upsertReply } from "../data/replies.js";
 import { $, $$, escapeHtml, getFormValues } from "../utils/dom.js";
-import { formatCurrency, formatTimeRange, formatRelativeTime, levelLabel, truncate, initials } from "../utils/format.js";
+import {
+  formatCurrency,
+  formatTimeRange,
+  formatRelativeTime,
+  levelLabel,
+  modalityLabel,
+  truncate,
+  initials,
+} from "../utils/format.js";
 import { showError, showSuccess } from "../utils/toast.js";
 
 main();
@@ -124,14 +132,14 @@ function escListener(e) {
   if (e.key === "Escape") closeModal();
 }
 
-// ---------- Rutinas ----------
+// ---------- Contenido de valor ----------
 async function refreshRoutines(trainerId) {
   const list = $("#routines-list");
   list.innerHTML = `<div class="skeleton" style="height:60px;"></div>`;
   const routines = await listMyRoutines(trainerId).catch(() => []);
 
   if (!routines.length) {
-    list.innerHTML = `<div class="empty-state"><span class="empty-state__emoji">📋</span><p>Todavía no cargaste rutinas.</p></div>`;
+    list.innerHTML = `<div class="empty-state"><span class="empty-state__emoji">📋</span><p>Todavía no cargaste contenido.</p></div>`;
     return;
   }
 
@@ -144,6 +152,7 @@ async function refreshRoutines(trainerId) {
             ${escapeHtml(r.title)}
             ${r.is_published ? "" : `<span class="badge">Oculta</span>`}
             ${r.routine_media?.length ? `<span class="badge">📷 ${r.routine_media.length}</span>` : ""}
+            ${r.link_url ? `<span class="badge">🔗 Link</span>` : ""}
           </div>
           <div class="text-secondary" style="font-size:.85rem;">${[r.level ? levelLabel(r.level) : null, r.description ? truncate(r.description, 80) : null]
             .filter(Boolean)
@@ -162,9 +171,9 @@ async function refreshRoutines(trainerId) {
   bindRowActions(list, routines, {
     edit: (routine) => openRoutineModal(trainerId, routine),
     delete: async (routine) => {
-      if (!confirm("¿Borrar esta rutina?")) return;
+      if (!confirm("¿Borrar este contenido?")) return;
       await deleteRoutine(routine.id);
-      showSuccess("Rutina borrada.");
+      showSuccess("Contenido borrado.");
       refreshRoutines(trainerId);
     },
   });
@@ -173,7 +182,7 @@ async function refreshRoutines(trainerId) {
 function openRoutineModal(trainerId, routine = null) {
   const isEdit = Boolean(routine);
   openModal(
-    isEdit ? "Editar rutina" : "Nueva rutina",
+    isEdit ? "Editar contenido" : "Nuevo contenido",
     `
     <form id="routine-form">
       <div class="field">
@@ -193,6 +202,19 @@ function openRoutineModal(trainerId, routine = null) {
         <label for="r-desc">Descripción</label>
         <textarea class="textarea" id="r-desc" name="description" maxlength="1000">${routine ? escapeHtml(routine.description || "") : ""}</textarea>
       </div>
+      <div class="field">
+        <label for="r-link">Link (opcional)</label>
+        <input
+          class="input"
+          type="url"
+          id="r-link"
+          name="link_url"
+          maxlength="500"
+          placeholder="https://…"
+          value="${routine?.link_url ? escapeHtml(routine.link_url) : ""}"
+        />
+        <span class="field-hint">Un Drive, PDF, YouTube o donde tengas el contenido completo.</span>
+      </div>
       <div class="field" style="flex-direction:row; align-items:center; gap:8px;">
         <input type="checkbox" id="r-published" name="is_published" ${!routine || routine.is_published ? "checked" : ""} style="width:auto;" />
         <label for="r-published" style="margin:0;">Publicada (visible para alumnos)</label>
@@ -207,7 +229,7 @@ function openRoutineModal(trainerId, routine = null) {
             : `<span class="field-hint">Podés sumarle fotos y videos apenas la crees.</span>`
         }
       </div>
-      <button class="btn btn--primary" type="submit">${isEdit ? "Guardar cambios" : "Publicar rutina"}</button>
+      <button class="btn btn--primary" type="submit">${isEdit ? "Guardar cambios" : "Publicar contenido"}</button>
     </form>
   `
   );
@@ -220,26 +242,33 @@ function openRoutineModal(trainerId, routine = null) {
     btn.disabled = true;
     try {
       const values = getFormValues(e.target);
+      const link = values.link_url?.trim() || "";
+      if (link && !/^https?:\/\//i.test(link)) {
+        showError("El link tiene que empezar con http:// o https://");
+        btn.disabled = false;
+        return;
+      }
       const fields = {
         title: values.title.trim(),
         level: values.level || null,
         description: values.description?.trim() || null,
+        link_url: link || null,
         is_published: e.target.querySelector("#r-published").checked,
       };
       if (isEdit) {
         await updateRoutine(routine.id, fields);
-        showSuccess("Rutina actualizada.");
+        showSuccess("Contenido actualizado.");
         closeModal();
         refreshRoutines(trainerId);
       } else {
         const created = await createRoutine(trainerId, fields);
-        showSuccess("Rutina publicada.");
+        showSuccess("Contenido publicado.");
         refreshRoutines(trainerId);
         openRoutineModal(trainerId, { ...created, routine_media: [] });
       }
     } catch (err) {
       console.error(err);
-      showError("No pudimos guardar la rutina.");
+      showError("No pudimos guardar el contenido.");
       btn.disabled = false;
     }
   });
@@ -440,7 +469,9 @@ async function refreshPricing(trainerId) {
             ${p.is_promo ? `<span class="badge badge--promo">Promo</span>` : ""}
             ${p.active ? "" : `<span class="badge">Inactivo</span>`}
           </div>
-          <div class="text-secondary" style="font-size:.85rem;">${escapeHtml(formatCurrency(p.price, p.currency))}</div>
+          <div class="text-secondary" style="font-size:.85rem;">${[escapeHtml(formatCurrency(p.price, p.currency)), p.modality ? escapeHtml(modalityLabel(p.modality)) : null]
+            .filter(Boolean)
+            .join(" · ")}</div>
         </div>
         <div class="dashboard-row__actions">
           <button class="btn btn--ghost btn--sm" data-action="edit">Editar</button>
@@ -485,6 +516,15 @@ function openPriceModal(trainerId, item = null) {
         <label for="p-desc">Descripción (opcional)</label>
         <textarea class="textarea" id="p-desc" name="description" maxlength="500">${item ? escapeHtml(item.description || "") : ""}</textarea>
       </div>
+      <div class="field">
+        <label for="p-modality">Modalidad</label>
+        <select class="select" id="p-modality" name="modality">
+          <option value="">Sin especificar</option>
+          <option value="presencial" ${item?.modality === "presencial" ? "selected" : ""}>Presencial</option>
+          <option value="online" ${item?.modality === "online" ? "selected" : ""}>Online</option>
+          <option value="ambos" ${item?.modality === "ambos" ? "selected" : ""}>Presencial y online</option>
+        </select>
+      </div>
       <div class="field" style="flex-direction:row; align-items:center; gap:8px;">
         <input type="checkbox" id="p-promo" name="is_promo" ${item?.is_promo ? "checked" : ""} style="width:auto;" />
         <label for="p-promo" style="margin:0;">Es una promo</label>
@@ -504,6 +544,7 @@ function openPriceModal(trainerId, item = null) {
         title: values.title.trim(),
         price: values.price ? Number(values.price) : null,
         description: values.description?.trim() || null,
+        modality: values.modality || null,
         is_promo: e.target.querySelector("#p-promo").checked,
       };
       if (isEdit) await updatePricingItem(item.id, fields);

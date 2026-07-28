@@ -1,18 +1,23 @@
 import { supabase } from "../supabaseClient.js";
 
-export async function getOrCreateConversation(trainerId, studentId) {
+// otherId/myId en vez de trainerId/studentId: desde que un preparador
+// también puede iniciar una conversación con otro preparador, "quién iba
+// en qué columna" ya no lo define el rol. Se busca en los dos sentidos
+// posibles para no crear un hilo duplicado según quién escribe primero
+// (si ya existe {student_id:B, trainer_id:A} y ahora A le escribe a B,
+// tiene que encontrar ESE hilo, no crear uno nuevo al revés).
+export async function getOrCreateConversation(otherId, myId) {
   const { data: existing, error: findError } = await supabase
     .from("conversations")
     .select("*")
-    .eq("student_id", studentId)
-    .eq("trainer_id", trainerId)
+    .or(`and(student_id.eq.${myId},trainer_id.eq.${otherId}),and(student_id.eq.${otherId},trainer_id.eq.${myId})`)
     .maybeSingle();
   if (findError) throw findError;
   if (existing) return existing;
 
   const { data, error } = await supabase
     .from("conversations")
-    .insert({ student_id: studentId, trainer_id: trainerId })
+    .insert({ student_id: myId, trainer_id: otherId })
     .select()
     .single();
   if (error) throw error;

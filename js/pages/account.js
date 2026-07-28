@@ -50,6 +50,7 @@ async function main() {
           .filter(Boolean);
         fields.years_experience = $("#years_experience").value ? Number($("#years_experience").value) : null;
         fields.certifications = $("#certifications").value.trim() || null;
+        fields.education = $("#education").value.trim() || null;
       }
       await updateProfile(userId, fields);
       showSuccess("Perfil actualizado.");
@@ -78,7 +79,7 @@ async function main() {
 
   $("#delete-account-btn").addEventListener("click", async () => {
     if (!confirm("¿Seguro que querés borrar tu cuenta? No se puede deshacer.")) return;
-    if (!confirm("Última confirmación: se borran tus rutinas, precios, turnos y reseñas, y se vacía tu perfil. ¿Continuar?"))
+    if (!confirm("Última confirmación: se borra tu contenido, precios, turnos y reseñas, y se vacía tu perfil. ¿Continuar?"))
       return;
     try {
       await deleteMyAccount(userId, profile.role);
@@ -104,5 +105,6 @@ function fillForm(profile) {
     $("#specialties").value = (profile.specialties || []).join(", ");
     $("#years_experience").value = profile.years_experience ?? "";
     $("#certifications").value = profile.certifications || "";
+    $("#education").value = profile.education || "";
   }
 }

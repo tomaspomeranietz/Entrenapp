@@ -97,6 +97,31 @@ function renderHero(trainer) {
           : ""
       }
       ${trainer.bio ? `<p style="margin-top:20px;">${escapeHtml(trainer.bio)}</p>` : ""}
+      ${renderCredentials(trainer)}
+    </div>
+  `;
+}
+
+function renderCredentials(trainer) {
+  const rows = [
+    trainer.years_experience ? { label: "Experiencia", value: `${trainer.years_experience} años` } : null,
+    trainer.education ? { label: "Estudios", value: trainer.education } : null,
+    trainer.certifications ? { label: "Certificaciones", value: trainer.certifications } : null,
+  ].filter(Boolean);
+  if (!rows.length) return "";
+
+  return `
+    <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--color-border);">
+      ${rows
+        .map(
+          (r) => `
+        <div style="margin-top:10px;">
+          <span style="font-weight:600; font-size:.85rem;">${escapeHtml(r.label)}</span>
+          <p class="text-secondary" style="margin-top:2px;">${escapeHtml(r.value)}</p>
+        </div>
+      `
+        )
+        .join("")}
     </div>
   `;
 }
@@ -104,7 +129,7 @@ function renderHero(trainer) {
 async function renderMessageCta(viewer, trainerId) {
   const el = $("#message-cta");
   const isSelf = viewer.profile && viewer.profile.id === trainerId;
-  if (viewer.profile && viewer.profile.role === "alumno" && !isSelf) {
+  if (viewer.profile && !isSelf) {
     el.innerHTML = `
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         <a class="btn btn--primary" href="messages.html?with=${encodeURIComponent(trainerId)}">Mandar mensaje</a>
@@ -177,7 +202,7 @@ function openReportModal(targetType, targetId, label) {
 function renderRoutines(routines) {
   const list = $("#routines-list");
   if (!routines.length) {
-    list.innerHTML = `<p class="text-secondary">Todavía no publicó rutinas.</p>`;
+    list.innerHTML = `<p class="text-secondary">Todavía no publicó contenido.</p>`;
     return;
   }
   list.innerHTML = routines
@@ -190,6 +215,11 @@ function renderRoutines(routines) {
         </div>
         ${r.description ? `<p class="text-secondary" style="margin-top:8px;">${escapeHtml(r.description)}</p>` : ""}
         ${renderRoutineMedia(r.routine_media)}
+        ${
+          r.link_url
+            ? `<a class="btn btn--outline btn--sm" style="margin-top:12px;" href="${escapeHtml(r.link_url)}" target="_blank" rel="noopener noreferrer">Ver contenido ↗</a>`
+            : ""
+        }
       </div>
     `
     )
@@ -250,7 +280,10 @@ function renderPricing(items) {
       <div class="list-item">
         <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
           <span class="dashboard-row__title">${escapeHtml(p.title)}</span>
-          ${p.is_promo ? `<span class="badge badge--promo">Promo</span>` : ""}
+          <div style="display:flex; gap:4px;">
+            ${p.is_promo ? `<span class="badge badge--promo">Promo</span>` : ""}
+            ${p.modality ? `<span class="badge">${escapeHtml(modalityLabel(p.modality))}</span>` : ""}
+          </div>
         </div>
         <div style="font-weight:700; margin-top:4px;">${escapeHtml(formatCurrency(p.price, p.currency))}</div>
         ${p.description ? `<p class="text-secondary" style="margin-top:4px;">${escapeHtml(p.description)}</p>` : ""}

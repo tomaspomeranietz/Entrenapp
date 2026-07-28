@@ -28,7 +28,7 @@ async function main() {
   renderConversationList(conversations);
 
   const withTrainerId = new URLSearchParams(location.search).get("with");
-  if (withTrainerId && auth.profile.role === "alumno") {
+  if (withTrainerId && withTrainerId !== userId) {
     try {
       const created = await getOrCreateConversation(withTrainerId, userId);
       const refreshed = await listMyConversations(userId).catch(() => conversations);
