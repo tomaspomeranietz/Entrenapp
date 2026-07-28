@@ -38,6 +38,7 @@ const KNOWN_ERRORS = {
   "Invalid login credentials": "Email o contraseña incorrectos.",
   "User already registered": "Ya existe una cuenta con ese email.",
   "Password should be at least 6 characters": "La contraseña tiene que tener al menos 6 caracteres.",
+  "Email not confirmed": "Todavía no confirmaste tu email. Revisá tu casilla y tocá el link que te mandamos.",
 };
 
 export function translateAuthError(err) {

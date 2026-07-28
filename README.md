@@ -25,6 +25,7 @@ Mientras no hayas conectado un proyecto de Supabase real (ver siguiente sección
    3. `003_rls_policies.sql`
    4. `004_storage.sql`
    5. `005_routine_media.sql`
+   6. `006_security_fixes.sql`
 3. Andá a **Authentication → Providers → Email** y apagá "Confirm email" — así, al registrarse, el usuario queda logueado directo sin tener que revisar el mail.
 4. Andá a **Project Settings → API** y copiá el "Project URL" y la key "anon public".
 5. Pegá esos dos valores en [`js/config.js`](js/config.js):

@@ -28,7 +28,7 @@ async function main() {
       showSuccess("Foto actualizada.");
     } catch (err) {
       console.error(err);
-      showError("No pudimos subir la foto.");
+      showError(err.message || "No pudimos subir la foto.");
     }
   });
 

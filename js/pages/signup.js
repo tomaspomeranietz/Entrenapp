@@ -14,8 +14,17 @@ form.addEventListener("submit", async (e) => {
   submitBtn.disabled = true;
   try {
     const { role, full_name, email, password } = getFormValues(form);
-    await signUp({ email, password, fullName: full_name, role });
-    location.href = role === "preparador" ? "dashboard-trainer.html" : "index.html";
+    const { session } = await signUp({ email, password, fullName: full_name, role });
+    if (session) {
+      // Confirmación de email desactivada: queda logueado directo.
+      location.href = role === "preparador" ? "dashboard-trainer.html" : "index.html";
+      return;
+    }
+    // Confirmación de email activada: todavía no hay sesión hasta que
+    // toque el link que le llega por mail.
+    $("#confirm-email-address").textContent = email;
+    $("#signup-form-view").hidden = true;
+    $("#confirm-email-msg").hidden = false;
   } catch (err) {
     showError(translateAuthError(err));
     submitBtn.disabled = false;

@@ -185,7 +185,7 @@ function renderPricing(items) {
           <span class="dashboard-row__title">${escapeHtml(p.title)}</span>
           ${p.is_promo ? `<span class="badge badge--promo">Promo</span>` : ""}
         </div>
-        <div style="font-weight:700; margin-top:4px;">${formatCurrency(p.price, p.currency)}</div>
+        <div style="font-weight:700; margin-top:4px;">${escapeHtml(formatCurrency(p.price, p.currency))}</div>
         ${p.description ? `<p class="text-secondary" style="margin-top:4px;">${escapeHtml(p.description)}</p>` : ""}
       </div>
     `

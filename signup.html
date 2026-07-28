@@ -15,52 +15,62 @@
 
     <main class="page-main app-content">
       <div class="container">
-        <div class="card auth-card" style="max-width: 480px">
-          <h1>Creá tu cuenta</h1>
-          <form id="signup-form" novalidate>
-            <div class="field">
-              <label>Soy...</label>
-              <div class="role-picker">
-                <label class="role-picker__option">
-                  <input type="radio" name="role" value="alumno" checked />
-                  <span class="role-picker__card">
-                    <span class="role-picker__emoji">🏃</span>
-                    Alumno
-                  </span>
-                </label>
-                <label class="role-picker__option">
-                  <input type="radio" name="role" value="preparador" />
-                  <span class="role-picker__card">
-                    <span class="role-picker__emoji">🏋️</span>
-                    Preparador físico
-                  </span>
-                </label>
+        <div class="card auth-card" style="max-width: 480px" id="signup-card">
+          <div id="confirm-email-msg" hidden>
+            <h1>Revisá tu email</h1>
+            <p class="text-secondary" style="margin-top: 12px">
+              Te mandamos un link de confirmación a <strong id="confirm-email-address"></strong>. Abrilo para poder
+              ingresar — puede tardar un minuto en llegar, y a veces cae en spam.
+            </p>
+            <p class="auth-card__foot"><a href="login.html">Volver a ingresar</a></p>
+          </div>
+          <div id="signup-form-view">
+            <h1>Creá tu cuenta</h1>
+            <form id="signup-form" novalidate>
+              <div class="field">
+                <label>Soy...</label>
+                <div class="role-picker">
+                  <label class="role-picker__option">
+                    <input type="radio" name="role" value="alumno" checked />
+                    <span class="role-picker__card">
+                      <span class="role-picker__emoji">🏃</span>
+                      Alumno
+                    </span>
+                  </label>
+                  <label class="role-picker__option">
+                    <input type="radio" name="role" value="preparador" />
+                    <span class="role-picker__card">
+                      <span class="role-picker__emoji">🏋️</span>
+                      Preparador físico
+                    </span>
+                  </label>
+                </div>
               </div>
-            </div>
-            <div class="field">
-              <label for="full_name">Nombre y apellido</label>
-              <input class="input" type="text" id="full_name" name="full_name" required autocomplete="name" />
-            </div>
-            <div class="field">
-              <label for="email">Email</label>
-              <input class="input" type="email" id="email" name="email" required autocomplete="email" />
-            </div>
-            <div class="field">
-              <label for="password">Contraseña</label>
-              <input
-                class="input"
-                type="password"
-                id="password"
-                name="password"
-                required
-                minlength="6"
-                autocomplete="new-password"
-              />
-              <span class="field-hint">Mínimo 6 caracteres.</span>
-            </div>
-            <button class="btn btn--primary btn--block" type="submit">Crear cuenta</button>
-          </form>
-          <p class="auth-card__foot">¿Ya tenés cuenta? <a href="login.html">Ingresá</a></p>
+              <div class="field">
+                <label for="full_name">Nombre y apellido</label>
+                <input class="input" type="text" id="full_name" name="full_name" required autocomplete="name" />
+              </div>
+              <div class="field">
+                <label for="email">Email</label>
+                <input class="input" type="email" id="email" name="email" required autocomplete="email" />
+              </div>
+              <div class="field">
+                <label for="password">Contraseña</label>
+                <input
+                  class="input"
+                  type="password"
+                  id="password"
+                  name="password"
+                  required
+                  minlength="6"
+                  autocomplete="new-password"
+                />
+                <span class="field-hint">Mínimo 6 caracteres.</span>
+              </div>
+              <button class="btn btn--primary btn--block" type="submit">Crear cuenta</button>
+            </form>
+            <p class="auth-card__foot">¿Ya tenés cuenta? <a href="login.html">Ingresá</a></p>
+          </div>
         </div>
       </div>
     </main>

@@ -1,15 +1,25 @@
 import { supabase } from "../supabaseClient.js";
 
-// "!reviews_student_id_fkey" desambigua: reviews tiene dos relaciones con
-// profiles (trainer_id y student_id), PostgREST necesita saber cuál usar.
+// El nombre/avatar del alumno se pide aparte contra la vista pública
+// profile_identities (no contra profiles directo): desde sql/006, un perfil
+// de alumno solo se puede leer completo siendo uno mismo, así que el embed
+// directo de PostgREST contra profiles ya no devolvería nada para otro alumno.
 export async function listReviewsForTrainer(trainerId) {
-  const { data, error } = await supabase
+  const { data: reviews, error } = await supabase
     .from("reviews")
-    .select("*, student:profiles!reviews_student_id_fkey(full_name, avatar_url), review_replies(*)")
+    .select("*, review_replies(*)")
     .eq("trainer_id", trainerId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return data;
+  if (!reviews.length) return reviews;
+
+  const { data: students } = await supabase
+    .from("profile_identities")
+    .select("id, full_name, avatar_url")
+    .in("id", reviews.map((r) => r.student_id));
+  const byId = new Map((students || []).map((s) => [s.id, s]));
+
+  return reviews.map((r) => ({ ...r, student: byId.get(r.student_id) || null }));
 }
 
 export async function getMyReviewFor(trainerId, studentId) {

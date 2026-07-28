@@ -77,7 +77,12 @@ export async function updateCurrentFocus(userId, text) {
   });
 }
 
+const AVATAR_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024; // igual al límite configurado en el bucket (sql/006)
+
 export async function uploadAvatar(userId, file) {
+  if (!AVATAR_ALLOWED_TYPES.includes(file.type)) throw new Error("Subí una foto en formato JPG, PNG, WEBP o GIF.");
+  if (file.size > AVATAR_MAX_BYTES) throw new Error("La foto no puede pesar más de 5MB.");
   const ext = file.name.split(".").pop();
   const path = `${userId}/${Date.now()}.${ext}`;
   const { error: uploadError } = await supabase.storage

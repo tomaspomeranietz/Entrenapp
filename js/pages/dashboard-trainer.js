@@ -440,7 +440,7 @@ async function refreshPricing(trainerId) {
             ${p.is_promo ? `<span class="badge badge--promo">Promo</span>` : ""}
             ${p.active ? "" : `<span class="badge">Inactivo</span>`}
           </div>
-          <div class="text-secondary" style="font-size:.85rem;">${formatCurrency(p.price, p.currency)}</div>
+          <div class="text-secondary" style="font-size:.85rem;">${escapeHtml(formatCurrency(p.price, p.currency))}</div>
         </div>
         <div class="dashboard-row__actions">
           <button class="btn btn--ghost btn--sm" data-action="edit">Editar</button>
