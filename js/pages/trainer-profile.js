@@ -137,10 +137,38 @@ function renderRoutineMedia(media) {
     .map((m) =>
       m.media_type === "video"
         ? `<video src="${escapeHtml(m.url)}" preload="metadata" controls playsinline></video>`
-        : `<img src="${escapeHtml(m.url)}" alt="" loading="lazy" />`
+        : `<img src="${escapeHtml(m.url)}" alt="" loading="lazy" data-action="open-lightbox" />`
     )
     .join("");
   return `<div class="media-gallery">${items}</div>`;
+}
+
+// Click en cualquier foto de una galería (event delegation: las galerías se
+// re-renderizan seguido, así no hay que volver a bindear cada vez).
+document.addEventListener("click", (e) => {
+  const img = e.target.closest('.media-gallery img[data-action="open-lightbox"]');
+  if (img) openLightbox(img.src);
+});
+
+function openLightbox(url) {
+  const overlay = document.createElement("div");
+  overlay.className = "lightbox";
+  overlay.innerHTML = `
+    <button class="lightbox__close" type="button" aria-label="Cerrar">✕</button>
+    <img src="${escapeHtml(url)}" alt="" />
+  `;
+  const close = () => {
+    overlay.remove();
+    document.removeEventListener("keydown", onKey);
+  };
+  function onKey(e) {
+    if (e.key === "Escape") close();
+  }
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay || e.target.closest(".lightbox__close")) close();
+  });
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(overlay);
 }
 
 function renderPricing(items) {
