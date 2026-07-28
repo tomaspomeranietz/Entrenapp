@@ -1,9 +1,12 @@
 import "../components/site-header.js";
 import "../components/star-rating.js";
 import { listTrainers } from "../data/profiles.js";
+import { requireAuth } from "../guard.js";
 import { $, escapeHtml } from "../utils/dom.js";
 import { initials, modalityLabel, truncate } from "../utils/format.js";
 import { showError } from "../utils/toast.js";
+
+const auth = await requireAuth();
 
 const grid = $("#trainers-grid");
 const searchForm = $("#search-form");
@@ -79,19 +82,21 @@ function skeletonCards() {
     .join("");
 }
 
-searchForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const search = new FormData(searchForm).get("search")?.toString() || "";
-  loadTrainers(search);
-});
+if (auth) {
+  searchForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const search = new FormData(searchForm).get("search")?.toString() || "";
+    loadTrainers(search);
+  });
 
-modalityFilters.addEventListener("click", (e) => {
-  const btn = e.target.closest(".filter-chip");
-  if (!btn) return;
-  currentModality = btn.dataset.modality;
-  modalityFilters.querySelectorAll(".filter-chip").forEach((b) => b.classList.toggle("is-active", b === btn));
-  const search = new FormData(searchForm).get("search")?.toString() || "";
-  loadTrainers(search);
-});
+  modalityFilters.addEventListener("click", (e) => {
+    const btn = e.target.closest(".filter-chip");
+    if (!btn) return;
+    currentModality = btn.dataset.modality;
+    modalityFilters.querySelectorAll(".filter-chip").forEach((b) => b.classList.toggle("is-active", b === btn));
+    const search = new FormData(searchForm).get("search")?.toString() || "";
+    loadTrainers(search);
+  });
 
-loadTrainers();
+  loadTrainers();
+}

@@ -36,8 +36,12 @@ class SiteHeader extends HTMLElement {
     }
 
     const isTrainer = profile.role === "preparador";
+    // El alumno ya tiene "Preparadores" como su link a home; al preparador
+    // le faltaba una forma de llegar al directorio (para poder, por ej.,
+    // escribirle a otro preparador).
     const dashboardLink = isTrainer
-      ? `<a class="site-header__link" href="dashboard-trainer.html">Mi panel</a>`
+      ? `<a class="site-header__link" href="index.html">Inicio</a>
+         <a class="site-header__link" href="dashboard-trainer.html">Mi panel</a>`
       : `<a class="site-header__link" href="index.html">Preparadores</a>`;
 
     const initial = escapeHtml((profile.full_name || "?").trim().slice(0, 1).toUpperCase());

@@ -17,6 +17,7 @@ async function main() {
   fillForm(profile);
   if (profile.role === "preparador") {
     $("#trainer-fields").hidden = false;
+    $("#city").required = true;
   }
 
   $("#avatar-input").addEventListener("change", async (e) => {

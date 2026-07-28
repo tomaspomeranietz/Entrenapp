@@ -2,11 +2,11 @@
 // cada página lo capture y muestre el mensaje con toast.js.
 import { supabase } from "./supabaseClient.js";
 
-export async function signUp({ email, password, fullName, role }) {
+export async function signUp({ email, password, fullName, role, city }) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName, role } },
+    options: { data: { full_name: fullName, role, city } },
   });
   if (error) throw error;
   return data;

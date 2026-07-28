@@ -142,7 +142,7 @@
   color: var(--color-text);
 }
 
-@media (min-width: 640px) {
+@media (min-width: 780px) {
   .site-header__toggle {
     display: none;
   }
@@ -156,7 +156,7 @@
     border: none;
     box-shadow: none;
     padding: 0;
-    gap: var(--space-5);
+    gap: var(--space-4);
   }
 
   .site-header__role {

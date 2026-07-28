@@ -7,14 +7,26 @@ import { showError } from "../utils/toast.js";
 await redirectIfAuthenticated();
 
 const form = $("#signup-form");
+const cityField = $("#city-field");
+const cityInput = $("#signup-city");
+
+// La ciudad es obligatoria para preparador (para que el directorio sirva
+// de algo) pero no tiene sentido pedírsela a un alumno.
+function syncCityField() {
+  const isTrainer = form.querySelector('input[name="role"]:checked')?.value === "preparador";
+  cityField.hidden = !isTrainer;
+  cityInput.required = isTrainer;
+}
+form.querySelectorAll('input[name="role"]').forEach((r) => r.addEventListener("change", syncCityField));
+syncCityField();
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const submitBtn = form.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
   try {
-    const { role, full_name, email, password } = getFormValues(form);
-    const { session } = await signUp({ email, password, fullName: full_name, role });
+    const { role, full_name, email, password, city } = getFormValues(form);
+    const { session } = await signUp({ email, password, fullName: full_name, role, city: role === "preparador" ? city : null });
     if (session) {
       // Confirmación de email desactivada: queda logueado directo.
       location.href = role === "preparador" ? "dashboard-trainer.html" : "index.html";

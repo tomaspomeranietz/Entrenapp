@@ -6,7 +6,8 @@ import { listActivePricing } from "../data/pricing.js";
 import { listUpcomingAvailability } from "../data/availability.js";
 import { listReviewsForTrainer, getMyReviewFor, upsertMyReview } from "../data/reviews.js";
 import { blockUser, unblockUser, isBlockedEitherWay, reportContent } from "../data/moderation.js";
-import { getSessionAndProfile } from "../guard.js";
+import { followTrainer, unfollowTrainer, isFollowing } from "../data/follows.js";
+import { requireAuth } from "../guard.js";
 import { $, escapeHtml } from "../utils/dom.js";
 import { initials, modalityLabel, levelLabel, formatCurrency, formatTimeRange, formatRelativeTime } from "../utils/format.js";
 import { showError, showSuccess } from "../utils/toast.js";
@@ -15,10 +16,14 @@ import { openModal, closeModal } from "../utils/modal.js";
 const trainerId = new URLSearchParams(location.search).get("id");
 let currentViewer = { session: null, profile: null };
 
-if (!trainerId) {
-  showNotFound();
-} else {
-  init(trainerId);
+const auth = await requireAuth();
+if (auth) {
+  currentViewer = { session: auth.session, profile: auth.profile };
+  if (!trainerId) {
+    showNotFound();
+  } else {
+    init(trainerId);
+  }
 }
 
 async function init(id) {
@@ -34,22 +39,23 @@ async function init(id) {
   renderHero(trainer);
   $("#trainer-content").hidden = false;
 
-  const [routines, pricing, availability, reviews, viewer] = await Promise.all([
+  const viewer = currentViewer;
+  const isSelf = viewer.profile && viewer.profile.id === id;
+  const following = viewer.profile && !isSelf ? await isFollowing(viewer.profile.id, id).catch(() => false) : false;
+
+  const [routines, pricing, availability, reviews] = await Promise.all([
     listPublishedRoutines(id).catch(() => []),
     listActivePricing(id).catch(() => []),
     listUpcomingAvailability(id).catch(() => []),
     listReviewsForTrainer(id).catch(() => []),
-    getSessionAndProfile(),
   ]);
-  currentViewer = viewer;
 
-  renderRoutines(routines);
+  renderRoutines(routines, isSelf || following);
   renderPricing(pricing);
   renderAvailability(availability);
   renderReviews(reviews);
-  renderMessageCta(viewer, id);
+  renderMessageCta(viewer, id, following);
 
-  const isSelf = viewer.profile && viewer.profile.id === id;
   const isStudent = viewer.profile && viewer.profile.role === "alumno" && !isSelf;
   if (isStudent) {
     renderReviewForm(id, viewer.profile.id);
@@ -126,17 +132,38 @@ function renderCredentials(trainer) {
   `;
 }
 
-async function renderMessageCta(viewer, trainerId) {
+async function renderMessageCta(viewer, trainerId, following) {
   const el = $("#message-cta");
   const isSelf = viewer.profile && viewer.profile.id === trainerId;
   if (viewer.profile && !isSelf) {
     el.innerHTML = `
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <button class="btn ${following ? "btn--outline" : "btn--primary"} btn--sm" type="button" id="follow-trainer-btn">
+          ${following ? "Siguiendo ✓" : "Seguir"}
+        </button>
         <a class="btn btn--primary" href="messages.html?with=${encodeURIComponent(trainerId)}">Mandar mensaje</a>
         <button class="btn btn--ghost btn--sm" type="button" id="report-trainer-btn">Reportar</button>
         <button class="btn btn--ghost btn--sm" type="button" id="block-trainer-btn">Bloquear</button>
       </div>
     `;
+    $("#follow-trainer-btn").addEventListener("click", async () => {
+      try {
+        if (following) {
+          await unfollowTrainer(viewer.profile.id, trainerId);
+          showSuccess("Dejaste de seguirlo.");
+        } else {
+          await followTrainer(viewer.profile.id, trainerId);
+          showSuccess("¡Ahora lo seguís!");
+        }
+        const routines = await listPublishedRoutines(trainerId).catch(() => []);
+        renderRoutines(routines, !following);
+        renderMessageCta(viewer, trainerId, !following);
+      } catch (err) {
+        console.error(err);
+        showError("No pudimos actualizar el seguimiento.");
+      }
+    });
+
     $("#report-trainer-btn").addEventListener("click", () => openReportModal("user", trainerId, "este preparador"));
 
     const blockBtn = $("#block-trainer-btn");
@@ -157,7 +184,7 @@ async function renderMessageCta(viewer, trainerId) {
           await blockUser(viewer.profile.id, trainerId);
           showSuccess("Bloqueado.");
         }
-        renderMessageCta(viewer, trainerId);
+        renderMessageCta(viewer, trainerId, following);
       } catch (err) {
         console.error(err);
         showError("No pudimos actualizar el bloqueo.");
@@ -199,8 +226,12 @@ function openReportModal(targetType, targetId, label) {
   });
 }
 
-function renderRoutines(routines) {
+function renderRoutines(routines, canView) {
   const list = $("#routines-list");
+  if (!canView) {
+    list.innerHTML = `<div class="empty-state"><span class="empty-state__emoji">🔒</span><p>Seguí a este preparador para ver su contenido de valor.</p></div>`;
+    return;
+  }
   if (!routines.length) {
     list.innerHTML = `<p class="text-secondary">Todavía no publicó contenido.</p>`;
     return;
